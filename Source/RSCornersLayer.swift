@@ -10,10 +10,10 @@ import UIKit
 import QuartzCore
 
 open class RSCornersLayer: CALayer {
-    open var strokeColor = UIColor.green.cgColor
-    open var strokeWidth: CGFloat = 2
-    open var drawingCornersArray: Array<Array<CGPoint>> = []
-    open var cornersArray: Array<[Any]> = [] {
+    @objc open var strokeColor = UIColor.green.cgColor
+    @objc open var strokeWidth: CGFloat = 2
+    @objc open var drawingCornersArray: Array<Array<CGPoint>> = []
+    @objc open var cornersArray: Array<[Any]> = [] {
         willSet {
             DispatchQueue.main.async(execute: {
                 self.setNeedsDisplay()
@@ -22,6 +22,8 @@ open class RSCornersLayer: CALayer {
     }
     
     override open func draw(in ctx: CGContext) {
+        guard let cornerPointsArray = cornersArray as? [[CGPoint]] else { return }
+
         objc_sync_enter(self)
         
         ctx.saveGState()
@@ -32,20 +34,15 @@ open class RSCornersLayer: CALayer {
         ctx.setStrokeColor(self.strokeColor)
         ctx.setLineWidth(self.strokeWidth)
         
-        for corners in self.cornersArray {
-            for i in 0...corners.count {
-                var idx = i
-                if i == corners.count {
-                    idx = 0
-                }
-                let point = corners[idx] as! CGPoint
-                
-                if i == 0 {
+        for corners in cornerPointsArray {
+            for (idx, point) in corners.enumerated() {
+                if idx == 0 {
                     ctx.move(to: point)
                 } else {
                     ctx.addLine(to: point)
                 }
             }
+            ctx.closePath()
         }
         
         ctx.drawPath(using: CGPathDrawingMode.fillStroke)

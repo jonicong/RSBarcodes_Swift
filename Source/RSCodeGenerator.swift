@@ -183,7 +183,7 @@ open class RSAbstractCodeGenerator : RSCodeGenerator {
                 }
                 if let outputImage = filter.outputImage {
                     if let cgImage = ContextMaker.make().createCGImage(outputImage, from: outputImage.extent) {
-                        return UIImage(cgImage: cgImage, scale: 1, orientation: UIImageOrientation.up)
+                        return UIImage(cgImage: cgImage, scale: UIScreen.main.scale, orientation: .up)
                     }
                 }
             }
@@ -199,27 +199,24 @@ open class RSAbstractCodeGenerator : RSCodeGenerator {
     open class func resizeImage(_ source:UIImage, scale:CGFloat) -> UIImage? {
         let width = source.size.width * scale
         let height = source.size.height * scale
-        
-        UIGraphicsBeginImageContext(CGSize(width: width, height: height))
-        if let context = UIGraphicsGetCurrentContext() {
-            context.interpolationQuality = CGInterpolationQuality.none
-            source.draw(in: CGRect(x: 0, y: 0, width: width, height: height))
-            let target = UIGraphicsGetImageFromCurrentImageContext()
-            UIGraphicsEndImageContext()
-            return target
-        } else {
-            return nil
-        }
+
+        UIGraphicsBeginImageContextWithOptions(CGSize(width: width, height: height), false, 0)
+        guard let context = UIGraphicsGetCurrentContext() else { return nil }
+        context.interpolationQuality = .none
+        source.draw(in: CGRect(x: 0, y: 0, width: width, height: height))
+        let target = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return target
     }
     
-    open class func resizeImage(_ source:UIImage, targetSize:CGSize, contentMode:UIViewContentMode) -> UIImage? {
+    open class func resizeImage(_ source:UIImage, targetSize:CGSize, contentMode:UIView.ContentMode) -> UIImage? {
         var x: CGFloat = 0
         var y: CGFloat = 0
         var width = targetSize.width
         var height = targetSize.height
-        if contentMode == UIViewContentMode.scaleToFill { // contents scaled to fill
+        if contentMode == .scaleToFill { // contents scaled to fill
             // Nothing to do
-        } else if contentMode == UIViewContentMode.scaleAspectFill { // contents scaled to fill with fixed aspect. some portion of content may be clipped.
+        } else if contentMode == .scaleAspectFill { // contents scaled to fill with fixed aspect. some portion of content may be clipped.
             let targtLength  = (targetSize.height > targetSize.width)   ? targetSize.height  : targetSize.width
             let sourceLength = (source.size.height < source.size.width) ? source.size.height : source.size.width
             let fillScale = targtLength / sourceLength
@@ -231,47 +228,44 @@ open class RSAbstractCodeGenerator : RSCodeGenerator {
             let scaledRect = AVMakeRect(aspectRatio: source.size, insideRect: CGRect(x: 0.0, y: 0.0, width: targetSize.width, height: targetSize.height))
             width = scaledRect.width
             height = scaledRect.height
-            if contentMode == UIViewContentMode.scaleAspectFit
-                || contentMode == UIViewContentMode.redraw
-                || contentMode == UIViewContentMode.center {
+            if contentMode == .scaleAspectFit
+                || contentMode == .redraw
+                || contentMode == .center {
                 x = (targetSize.width  - width)  / 2.0
                 y = (targetSize.height - height) / 2.0
-            } else if contentMode == UIViewContentMode.top {
+            } else if contentMode == .top {
                 x = (targetSize.width  - width)  / 2.0
                 y = 0
-            } else if contentMode == UIViewContentMode.bottom {
+            } else if contentMode == .bottom {
                 x = (targetSize.width  - width)  / 2.0
                 y = targetSize.height - height
-            } else if contentMode == UIViewContentMode.left {
+            } else if contentMode == .left {
                 x = 0
                 y = (targetSize.height - height) / 2.0
-            } else if contentMode == UIViewContentMode.right {
+            } else if contentMode == .right {
                 x = targetSize.width  - width
                 y = (targetSize.height - height) / 2.0
-            } else if contentMode == UIViewContentMode.topLeft {
+            } else if contentMode == .topLeft {
                 x = 0
                 y = 0
-            } else if contentMode == UIViewContentMode.topRight {
+            } else if contentMode == .topRight {
                 x = targetSize.width  - width
                 y = 0
-            } else if contentMode == UIViewContentMode.bottomLeft {
+            } else if contentMode == .bottomLeft {
                 x = 0
                 y = targetSize.height - height
-            } else if contentMode == UIViewContentMode.bottomRight {
+            } else if contentMode == .bottomRight {
                 x = targetSize.width  - width
                 y = targetSize.height - height
             }
         }
         
-        UIGraphicsBeginImageContext(targetSize)
-        if let context = UIGraphicsGetCurrentContext() {
-            context.interpolationQuality = CGInterpolationQuality.none
-            source.draw(in: CGRect(x: x, y: y, width: width, height: height))
-            let target = UIGraphicsGetImageFromCurrentImageContext()
-            UIGraphicsEndImageContext()
-            return target
-        } else {
-            return nil
-        }
+        UIGraphicsBeginImageContextWithOptions(targetSize, false, 0)
+        guard let context = UIGraphicsGetCurrentContext() else { return nil }
+        context.interpolationQuality = CGInterpolationQuality.none
+        source.draw(in: CGRect(x: x, y: y, width: width, height: height))
+        let target = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return target
     }
 }
